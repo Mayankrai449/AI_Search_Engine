@@ -43,22 +43,32 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, pdf_file: UploadFil
         )
         embeddings_np = np.array(embeddings, dtype='float32')
 
-        
+        # Check if chatwindow exists, if not create it
+        chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)
+        if not os.path.exists(chat_dir):
+            os.makedirs(chat_dir)
+            save_metadata(chatwindow_uuid, [])
+            save_embeddings(chatwindow_uuid, doc_uuid, np.empty((0, embeddings_np.shape[1]), dtype='float32'))
+
         save_embeddings(chatwindow_uuid, doc_uuid, embeddings_np)
 
         docs = load_metadata(chatwindow_uuid)
         docs.append({"uuid": doc_uuid, "name": pdf_file.filename})
         save_metadata(chatwindow_uuid, docs)
 
-        if getattr(request.app.state, "current_chatwindow", None) == chatwindow_uuid:
-            request.app.state.current_chatwindow = chatwindow_uuid
-            request.app.state.index = load_chatwindow_embeddings(chatwindow_uuid)
-            request.app.state.text_chunks = load_text_chunks(chatwindow_uuid)
+
+        request.app.state.current_chatwindow = chatwindow_uuid
+        request.app.state.index = load_chatwindow_embeddings(chatwindow_uuid)
+        request.app.state.text_chunks = load_text_chunks(chatwindow_uuid)
+        print(f"Selected new chatwindow: {chatwindow_uuid}")
+        print("Index size:", request.app.state.index.ntotal)
+        print("Chunks loaded:", len(request.app.state.text_chunks))
 
         return {"status": "success", "doc_uuid": doc_uuid, "chunks_added": len(chunks)}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.delete("/delete-doc")
 async def delete_pdf(request: Request, chatwindow_uuid: str, doc_uuid: str):

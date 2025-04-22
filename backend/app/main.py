@@ -6,7 +6,7 @@ from routes import pdf_routes, query_routes
 import uvicorn
 import nltk
 
-nltk.download('punkt')
+nltk.download('punkt_tab', quiet=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
