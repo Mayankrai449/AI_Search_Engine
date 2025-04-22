@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './ChatWindow.css';
+import React, { useState, useRef } from 'react';
+import './ChatArea.css';
+import ResearchPanel from './ResearchPanel';
+import ChatPanel from './ChatPanel';
 
-const ChatWindow = () => {
+const ChatArea = ({ activeChatId, isSidebarCollapsed }) => {
   const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [deepSearch, setDeepSearch] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const chatLogRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const handleQuerySubmit = async (e) => {
@@ -34,7 +35,7 @@ const ChatWindow = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       handleQuerySubmit(e);
     }
@@ -56,45 +57,37 @@ const ChatWindow = () => {
     e.target.value = null;
   };
 
-  useEffect(() => {
-    if (chatLogRef.current) {
-      chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
-    }
-  }, [messages, uploadedFiles]);
-
   return (
-    <div className="chat-container">
-      <div className="chat-window">
-        <div className="chat-log" ref={chatLogRef}>
-          {messages.length === 0 && uploadedFiles.length === 0 && (
-            <div className="default-text">
-              Unleash NeoSearch: Upload your data galaxy and explore insights from the vast universe of information at your fingertips.
-            </div>
-          )}
-          {isTyping && <div className="typing-indicator">Searching...</div>}
-          {messages.slice().reverse().map((message, index) => (
-            <div key={index} className={`chat-message ${message.sender}`}>
-              {message.text}
-            </div>
-          ))}
-        </div>
-        {uploadedFiles.length > 0 && (
-          <div className="uploaded-files">
-            {uploadedFiles.map(file => (
-              <div key={file.id} className="file-item">
-                <span>{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className={`chat-area ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className="panels-container">
+        <ResearchPanel />
+        <ChatPanel 
+          messages={messages}
+          isTyping={isTyping}
+          uploadedFiles={uploadedFiles}
+        />
+      </div>
+      
+      <div className="query-container">
         <div className="query-box">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Search through the data lake"
           />
+          <button
+            className="send-btn"
+            type="submit"
+            disabled={!query.trim()}
+            onClick={handleQuerySubmit}
+          >
+            →
+          </button>
+        </div>
+        
+        <div className="extra-controls">
           <button className="upload-btn" type="button" onClick={handleUploadClick}>
             Upload
           </button>
@@ -112,18 +105,10 @@ const ChatWindow = () => {
           >
             DeepSearch
           </button>
-          <button
-            className="send-btn"
-            type="submit"
-            disabled={!query.trim()}
-            onClick={handleQuerySubmit}
-          >
-            →
-          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default ChatWindow;
+export default ChatArea;

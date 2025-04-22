@@ -8,3 +8,11 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.main-content {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 60px);
+  width: 100%;
+  overflow: hidden;
+}
