@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pymupdf==1.25.5
+sentence-transformers==4.0.2
+transformers==4.48.0
+huggingface-hub==0.26.5
+faiss-cpu
+pydantic
+numpy==2.0.2
+python-multipart
+aiofiles
