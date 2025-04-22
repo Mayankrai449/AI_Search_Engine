@@ -4,6 +4,9 @@ from models.embedding_model import load_model
 from models.faiss_manager import init_faiss
 from routes import pdf_routes, query_routes
 import uvicorn
+import nltk
+
+nltk.download('punkt')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

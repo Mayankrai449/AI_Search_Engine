@@ -1,6 +1,7 @@
 import fitz
 import re
 import asyncio
+from models.faiss_manager import save_text_chunks
 
 async def extract_and_clean_text(pdf_path):
     loop = asyncio.get_event_loop()
@@ -22,7 +23,7 @@ async def extract_and_clean_text(pdf_path):
 
     return cleaned_text
 
-def split_text_into_chunks(text, max_words=1000, overlap_words=200):
+def split_text_into_chunks(text, chatwindow_uuid, doc_uuid, max_words=1000, overlap_words=200):
     paragraphs = text.split('\n')
     chunks = []
     current_chunk = []
@@ -52,6 +53,8 @@ def split_text_into_chunks(text, max_words=1000, overlap_words=200):
 
     if current_chunk:
         chunks.append(' '.join(current_chunk))
+
+    save_text_chunks(chatwindow_uuid, doc_uuid, chunks)
 
     return chunks
 

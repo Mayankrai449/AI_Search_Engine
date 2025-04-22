@@ -5,6 +5,7 @@ __pycache__/
 searchenv
 .vscode
 sample.pdf
+data
 # C extensions
 *.so
 

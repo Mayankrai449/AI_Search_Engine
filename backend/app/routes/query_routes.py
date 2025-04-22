@@ -21,6 +21,10 @@ async def search_query(request: Request, query: QueryRequest):
 
         query_np = np.array(query_embedding, dtype='float32')
 
+        index = request.app.state.index
+        if index is None or index.ntotal == 0:
+            raise HTTPException(status_code=400, detail="No chatwindow selected or no embeddings available.")
+        
         scores, indices = search_embeddings(request.app.state.index, query_np, top_k=query.top_k)
 
         text_chunks = request.app.state.text_chunks
@@ -32,7 +36,8 @@ async def search_query(request: Request, query: QueryRequest):
                 "text": text_chunks[idx],
                 "score": float(score)
             })
-
+        print("Scores:", scores)
+        print("Indices:", indices)
         return {
             "query": query.query,
             "started_at": start_time,
