@@ -4,6 +4,8 @@ from models.faiss_manager import search_embeddings
 import numpy as np
 import asyncio
 from datetime import datetime, timezone
+from rank_bm25 import BM25Okapi
+from nltk.tokenize import word_tokenize
 
 router = APIRouter()
 
@@ -24,24 +26,40 @@ async def search_query(request: Request, query: QueryRequest):
         index = request.app.state.index
         if index is None or index.ntotal == 0:
             raise HTTPException(status_code=400, detail="No chatwindow selected or no embeddings available.")
-        
-        scores, indices = search_embeddings(request.app.state.index, query_np, top_k=query.top_k)
+
+        scores, indices = search_embeddings(index, query_np, top_k=query.top_k)
 
         text_chunks = request.app.state.text_chunks
-        results = []
+
+        tokenized_chunks = [word_tokenize(chunk.lower()) for chunk in text_chunks]
+
+        bm25 = BM25Okapi(tokenized_chunks)
+
+        tokenized_query = word_tokenize(query.query.lower())
+
+        bm25_scores = bm25.get_scores(tokenized_query)
+
+        bm25_results = []
         for score, idx in zip(scores[0], indices[0]):
             if idx == -1 or idx >= len(text_chunks):
                 continue
-            results.append({
+            bm25_score = bm25_scores[idx]
+            total_score = float(score) + bm25_score
+            
+            bm25_results.append({
                 "text": text_chunks[idx],
-                "score": float(score)
+                "score": total_score,
+                "bm25_score": bm25_score,
+                "vector_score": float(score)
             })
-        print("Scores:", scores)
-        print("Indices:", indices)
+
+        ranked_results = sorted(bm25_results, key=lambda x: x["score"], reverse=True)
+
+
         return {
             "query": query.query,
             "started_at": start_time,
-            "results": results
+            "results": ranked_results
         }
 
     except Exception as e:
