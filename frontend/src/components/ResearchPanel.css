@@ -1,20 +1,76 @@
+/* researchpanel.css */
 .research-panel {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    overflow: hidden;
-  }
-  
-  .placeholder-text {
-    color: #666;
-    font-size: 16px;
-    text-align: center;
-    padding: 20px;
-    max-width: 80%;
-    line-height: 1.6;
-  }
+  flex: 1;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.placeholder-text {
+  color: #666;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px;
+  margin: auto;
+  line-height: 1.6;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+  font-style: italic;
+}
+
+.research-results {
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 10px;
+  scrollbar-width: thin;
+}
+
+.research-results::-webkit-scrollbar {
+  width: 4px;
+}
+
+.research-results::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.research-results::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+.research-results::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+.result-item {
+  padding: 15px;
+  margin-bottom: 15px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  border-left: 4px solid #4a90e2;
+}
+
+.result-text {
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  white-space: pre-line;
+}
+
+.result-score {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 12px;
+  color: #777;
+}

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000',
+  baseURL: process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000',
   headers: {
     'Content-Type': 'application/json',
   }
@@ -29,7 +29,8 @@ export const createChatWindow = async () => {
 
 export const selectChatWindow = async (chatwindow_uuid) => {
   try {
-    const response = await API.post('/select-chatwindow', { chatwindow_uuid });
+
+    const response = await API.post(`/select-chatwindow?chatwindow_uuid=${chatwindow_uuid}`);
     return response.data;
   } catch (error) {
     console.error('Error selecting chat window:', error);
@@ -39,7 +40,8 @@ export const selectChatWindow = async (chatwindow_uuid) => {
 
 export const deleteChatWindow = async (chatwindow_uuid) => {
   try {
-    await API.post('/delete-chatwindow', { chatwindow_uuid });
+
+    await API.delete('/delete-chatwindow', { params: { chatwindow_uuid } });
     return true;
   } catch (error) {
     console.error('Error deleting chat window:', error);
@@ -49,7 +51,8 @@ export const deleteChatWindow = async (chatwindow_uuid) => {
 
 export const deleteDocument = async (chatwindow_uuid, doc_uuid) => {
   try {
-    await API.post('/delete-doc', { chatwindow_uuid, doc_uuid });
+
+    await API.delete('/delete-doc', { params: { chatwindow_uuid, doc_uuid } });
     return true;
   } catch (error) {
     console.error('Error deleting document:', error);
@@ -60,10 +63,10 @@ export const deleteDocument = async (chatwindow_uuid, doc_uuid) => {
 export const uploadFile = async (chatwindow_uuid, file) => {
   try {
     const formData = new FormData();
-    formData.append('chatwindow_uuid', chatwindow_uuid);
     formData.append('file', file);
     
-    const response = await API.post('/upload', formData, {
+
+    const response = await API.post(`/upload?chatwindow_uuid=${chatwindow_uuid}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -91,7 +94,8 @@ export const searchDocuments = async (query, chatwindow_uuid) => {
 
 export const updateChatWindowTitle = async (chatwindow_uuid, title) => {
   try {
-    await API.post(`/chatwindow/${chatwindow_uuid}/update-title`, {
+
+    await API.patch(`/chatwindows/${chatwindow_uuid}/update-title?chatwindow_uuid=${chatwindow_uuid}`, {
       title
     });
     return true;

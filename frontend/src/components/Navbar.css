@@ -1,16 +1,98 @@
 .navbar {
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
-  justify-content: left;
-  align-items: left;
-  margin-left: 40px;
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  align-items: center;
+  padding: 0 20px;
+  position: relative;
+  z-index: 100;
 }
 
-.navbar-logo h1 {
-  color: #1a1a1a;
-  font-size: 25px;
-  font-weight: 700;
-  letter-spacing: 1px;
+.navbar-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.navbar-title:hover {
+  color: #4a90e2;
+}
+
+.documents-container {
+  margin-left: auto;
+  position: relative;
+  max-width: 60%;
+  overflow: hidden;
+}
+
+.documents-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px 5px;
+  scrollbar-width: thin;
+}
+
+.documents-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.documents-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 2px;
+}
+
+.documents-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+.documents-scroll::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  background-color: #f1f1f1;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.document-item:hover {
+  background-color: #e6e6e6;
+}
+
+.document-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.document-delete-btn {
+  background: none;
+  border: none;
+  color: #777;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.document-delete-btn:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #f44336;
 }
