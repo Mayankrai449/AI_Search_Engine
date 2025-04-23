@@ -4,6 +4,17 @@ import os
 import json
 
 DATA_DIR = "data"
+DATA_INDEX_FILE = os.path.join(DATA_DIR, "data.json")
+
+def load_data_index():
+    if os.path.exists(DATA_INDEX_FILE):
+        with open(DATA_INDEX_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_data_index(data):
+    with open(DATA_INDEX_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 def init_faiss(dimension=384):
     index = faiss.IndexFlatIP(dimension)
@@ -33,10 +44,20 @@ def load_chatwindow_embeddings(chatwindow_uuid, dimension=384):
 
     return index
 
-def save_embeddings(chatwindow_uuid, doc_uuid, embeddings_np):
+def save_embeddings(chatwindow_uuid, doc_uuid, doc_name, embeddings_np):
     chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)
     os.makedirs(chat_dir, exist_ok=True)
     np.save(os.path.join(chat_dir, f"{doc_uuid}.npy"), embeddings_np)
+
+    data_index = load_data_index()
+    if chatwindow_uuid not in data_index:
+        data_index[chatwindow_uuid] = {
+            "title": f"ChatWindow {chatwindow_uuid[:6]}",
+            "documents": []
+        }
+    if not any(doc["uuid"] == doc_uuid for doc in data_index[chatwindow_uuid]["documents"]):
+        data_index[chatwindow_uuid]["documents"].append({"uuid": doc_uuid, "name": doc_name})
+    save_data_index(data_index)
 
 def delete_document(chatwindow_uuid, doc_uuid):
     chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)
@@ -44,12 +65,24 @@ def delete_document(chatwindow_uuid, doc_uuid):
     if os.path.exists(npy_path):
         os.remove(npy_path)
 
+    data_index = load_data_index()
+    if chatwindow_uuid in data_index:
+        data_index[chatwindow_uuid]["documents"] = [
+            d for d in data_index[chatwindow_uuid]["documents"] if d["uuid"] != doc_uuid
+        ]
+        save_data_index(data_index)
+
 def delete_chatwindow(chatwindow_uuid):
     chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)
     if os.path.exists(chat_dir):
         for file in os.listdir(chat_dir):
             os.remove(os.path.join(chat_dir, file))
         os.rmdir(chat_dir)
+
+    data_index = load_data_index()
+    if chatwindow_uuid in data_index:
+        del data_index[chatwindow_uuid]
+        save_data_index(data_index)
 
 def save_metadata(chatwindow_uuid, docs):
     chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)

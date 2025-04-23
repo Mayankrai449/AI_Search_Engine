@@ -23,11 +23,11 @@ async def select_chatwindow(request: Request, chatwindow_uuid: str):
 
 
 @router.post("/upload")
-async def upload_pdf(request: Request, chatwindow_uuid: str, pdf_file: UploadFile = File(...)):
+async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = File(...)):
     try:
         doc_uuid = str(uuid.uuid4())
-        contents = await pdf_file.read()
-        pdf_path = f"temp_{pdf_file.filename}"
+        contents = await file.read()
+        pdf_path = f"temp_{file.filename}"
         with open(pdf_path, 'wb') as f:
             f.write(contents)
 
@@ -43,17 +43,16 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, pdf_file: UploadFil
         )
         embeddings_np = np.array(embeddings, dtype='float32')
 
-        # Check if chatwindow exists, if not create it
         chat_dir = os.path.join(DATA_DIR, chatwindow_uuid)
         if not os.path.exists(chat_dir):
             os.makedirs(chat_dir)
             save_metadata(chatwindow_uuid, [])
-            save_embeddings(chatwindow_uuid, doc_uuid, np.empty((0, embeddings_np.shape[1]), dtype='float32'))
+            save_embeddings(chatwindow_uuid, doc_uuid, file.filename, np.empty((0, embeddings_np.shape[1]), dtype='float32'))
 
-        save_embeddings(chatwindow_uuid, doc_uuid, embeddings_np)
+        save_embeddings(chatwindow_uuid, doc_uuid, file.filename, embeddings_np)
 
         docs = load_metadata(chatwindow_uuid)
-        docs.append({"uuid": doc_uuid, "name": pdf_file.filename})
+        docs.append({"uuid": doc_uuid, "name": file.filename})
         save_metadata(chatwindow_uuid, docs)
 
 
