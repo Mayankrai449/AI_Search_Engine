@@ -34,7 +34,7 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
         text = await extract_and_clean_text(pdf_path)
         os.remove(pdf_path)
 
-        chunks = split_text_into_chunks(text, max_words=1000, overlap_words=200)
+        chunks = split_text_into_chunks(text, max_words=400, overlap_words=100)
 
         model = request.app.state.model
         loop = asyncio.get_event_loop()

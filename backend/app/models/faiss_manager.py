@@ -6,7 +6,7 @@ from models.db_models import Document, TextChunk
 
 DATA_DIR = "data"
 
-def init_faiss(dimension=384):
+def init_faiss(dimension=768):
     index = faiss.IndexFlatIP(dimension)
     return index
 
@@ -19,7 +19,7 @@ def search_embeddings(index, query_vector, top_k=3):
     scores, indices = index.search(query_vector, top_k)
     return scores, indices
 
-async def load_chatwindow_data(db, chatwindow_id: str, dimension=384):
+async def load_chatwindow_data(db, chatwindow_id: str, dimension=768):
     index = init_faiss(dimension)
     chunk_ids = []
     documents = await db.execute(select(Document).filter(Document.chatwindow_id == chatwindow_id))

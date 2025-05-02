@@ -2,7 +2,7 @@ import fitz
 import re
 import asyncio
 
-async def extract_and_clean_text(pdf_path):
+async def extract_and_clean_text(pdf_path: str) -> str:
     loop = asyncio.get_event_loop()
 
     def read_pdf():
@@ -22,7 +22,8 @@ async def extract_and_clean_text(pdf_path):
 
     return cleaned_text
 
-def split_text_into_chunks(text, max_words=1000, overlap_words=200):
+def split_text_into_chunks(text: str, max_words: int = 400, overlap_words: int = 100) -> list[str]:
+
     paragraphs = text.split('\n')
     chunks = []
     current_chunk = []
@@ -37,7 +38,8 @@ def split_text_into_chunks(text, max_words=1000, overlap_words=200):
             current_chunk.extend(words)
             current_word_count += len(words)
         else:
-            chunks.append(' '.join(current_chunk))
+            if current_chunk:
+                chunks.append(' '.join(current_chunk))
 
             if overlap_words > 0:
                 overlap = current_chunk[-overlap_words:] if len(current_chunk) >= overlap_words else current_chunk

@@ -7,7 +7,7 @@ from schemas.query_schema import TitleUpdateRequest
 router = APIRouter()
 
 @router.get("/chatwindows")
-async def get_all_chatwindows(db: AsyncSession = Depends(get_db)):
+async def get_all_chat(db: AsyncSession = Depends(get_db)):
     chatwindows = await get_all_chatwindows(db)
     return [{"id": cw.id, "title": cw.title} for cw in chatwindows]
 

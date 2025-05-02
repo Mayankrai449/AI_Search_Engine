@@ -1,4 +1,4 @@
-from database import engine, Base
+from models.database import engine, Base
 import asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
