@@ -11,3 +11,6 @@ python-multipart
 aiofiles
 nltk>=3.9.1
 rank_bm25>=0.2.2
+sentencepiece
+bitsandbytes==0.45.5
+accelerate==1.6.0

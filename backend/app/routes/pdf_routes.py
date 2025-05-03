@@ -36,7 +36,7 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
 
         chunks = split_text_into_chunks(text, max_words=400, overlap_words=100)
 
-        model = request.app.state.model
+        model = request.app.state.sentence_model
         loop = asyncio.get_event_loop()
         embeddings = await loop.run_in_executor(
             None, lambda: model.encode(chunks, normalize_embeddings=False)

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from schemas.query_schema import QueryRequest
 from models.faiss_manager import search_embeddings
+from models.embedding_model import generate_tailored_response, encode_with_amp
 from models.database import get_db
 from models.db_models import TextChunk
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,15 +17,18 @@ router = APIRouter()
 @router.post("/search")
 async def search_query(request: Request, query: QueryRequest, db: AsyncSession = Depends(get_db)):
     try:
-        model = request.app.state.model
+        sentence_model = request.app.state.sentence_model
+        llm_model = request.app.state.llm_model
+        llm_tokenizer = request.app.state.llm_tokenizer
+        device = sentence_model.device
         loop = asyncio.get_event_loop()
 
         start_time = datetime.now(timezone.utc).isoformat()
 
         query_embedding = await loop.run_in_executor(
-            None, lambda: model.encode([query.query], normalize_embeddings=False)
+            None,
+            lambda: encode_with_amp(sentence_model, [query.query], batch_size=64)
         )
-
         query_np = np.array(query_embedding, dtype='float32')
 
         index = request.app.state.index
@@ -43,7 +47,8 @@ async def search_query(request: Request, query: QueryRequest, db: AsyncSession =
             return {
                 "query": query.query,
                 "started_at": start_time,
-                "results": []
+                "results": [],
+                "tailored_response": "No relevant chunks found."
             }
 
         chunk_id_list = [chunk_ids[idx] for idx in valid_indices]
@@ -76,10 +81,15 @@ async def search_query(request: Request, query: QueryRequest, db: AsyncSession =
 
         ranked_results = sorted(bm25_results, key=lambda x: x["score"], reverse=True)
 
+        tailored_response = await generate_tailored_response(
+            llm_model, llm_tokenizer, query.query, text_chunks, max_length=200
+        )
+
         return {
             "query": query.query,
             "started_at": start_time,
-            "results": ranked_results
+            "results": ranked_results,
+            "tailored_response": tailored_response
         }
 
     except Exception as e:
