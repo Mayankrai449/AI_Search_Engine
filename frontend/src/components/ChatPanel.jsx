@@ -1,15 +1,14 @@
-//chatpanel.jsx
 import React, { useEffect, useRef } from 'react';
 import './ChatPanel.css';
 
-const ChatPanel = ({ messages, isTyping, isLoading }) => {
+const ChatPanel = ({ messages, isTyping, isLoading, onShowChunks }) => {
   const chatLogRef = useRef(null);
 
   useEffect(() => {
     if (chatLogRef.current) {
       chatLogRef.current.scrollTop = chatLogRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
   return (
     <div className="chat-panel">
@@ -22,12 +21,19 @@ const ChatPanel = ({ messages, isTyping, isLoading }) => {
           </div>
         ) : (
           <>
-            {isTyping && <div className="typing-indicator">Searching...</div>}
-            {messages.slice().reverse().map((message, index) => (
-              <div key={index} className={`chat-message ${message.sender}`}>
-                {message.text}
+            {messages.map((message, index) => (
+              <div key={index} className="message-wrapper">
+                <div className={`chat-message ${message.sender}`}>
+                  <p>{message.text}</p>
+                </div>
+                {message.sender === 'ai' && message.chunks && message.chunks.length > 0 && (
+                  <button className="fetched-data-btn" onClick={() => onShowChunks(message.chunks)}>
+                    Fetched Data
+                  </button>
+                )}
               </div>
             ))}
+            {isTyping && <div className="typing-indicator">Searching...</div>}
           </>
         )}
       </div>
