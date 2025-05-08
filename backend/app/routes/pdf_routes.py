@@ -31,10 +31,20 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
         with open(pdf_path, 'wb') as f:
             f.write(await file.read())
 
-        text = await extract_and_clean_text(pdf_path)
+        page_texts = await extract_and_clean_text(pdf_path)
+        print(page_texts)
         os.remove(pdf_path)
 
-        chunks = split_text_into_chunks(text, max_words=400, overlap_words=100)
+        paragraphs_with_pages = []
+        for page_num, cleaned_page_text in page_texts:
+            paragraphs = cleaned_page_text.split('\n')
+            for paragraph in paragraphs:
+                if paragraph.strip():
+                    paragraphs_with_pages.append((page_num, paragraph.strip()))
+
+        chunks_with_pages = split_text_into_chunks(paragraphs_with_pages, max_words=400, overlap_words=100)
+
+        chunks = [chunk for chunk, _ in chunks_with_pages]
 
         model = request.app.state.sentence_model
         loop = asyncio.get_event_loop()
@@ -46,7 +56,8 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
         embedding_path = save_embeddings(chatwindow_uuid, doc_uuid, file.filename, embeddings_np)
 
         document = await create_document(db, chatwindow_uuid, file.filename, embedding_path)
-        await create_text_chunks(db, document.id, chunks)
+
+        await create_text_chunks(db, document.id, chunks_with_pages)
 
         request.app.state.current_chatwindow = chatwindow_uuid
         request.app.state.index, request.app.state.chunk_ids = await load_chatwindow_data(db, chatwindow_uuid)

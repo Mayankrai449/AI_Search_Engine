@@ -58,8 +58,14 @@ async def delete_document(db: AsyncSession, chatwindow_id: str, doc_id: str):
         return True
     return False
 
-async def create_text_chunks(db: AsyncSession, document_id: str, chunks: list):
-    for i, chunk_text in enumerate(chunks):
-        chunk = TextChunk(id=str(uuid.uuid4()), document_id=document_id, chunk=chunk_text, chunk_index=i)
+async def create_text_chunks(db: AsyncSession, document_id: str, chunks_with_pages: list[tuple[str, int]]):
+    for i, (chunk_text, page_number) in enumerate(chunks_with_pages):
+        chunk = TextChunk(
+            id=str(uuid.uuid4()),
+            document_id=document_id,
+            chunk=chunk_text,
+            chunk_index=i,
+            page_number=page_number
+        )
         db.add(chunk)
     await db.commit()

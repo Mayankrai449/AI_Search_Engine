@@ -27,4 +27,5 @@ class TextChunk(Base):
     document_id = Column(String, ForeignKey("public.documents.id"))
     chunk = Column(Text)
     chunk_index = Column(Integer)
+    page_number = Column(Integer, nullable=False)
     document = relationship("Document", back_populates="chunks")
