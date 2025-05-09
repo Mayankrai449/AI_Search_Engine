@@ -53,8 +53,8 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
         )
         embeddings_np = np.array(embeddings, dtype='float32')
 
-        embedding_path = save_embeddings(chatwindow_uuid, doc_uuid, file.filename, embeddings_np)
-
+        embedding_path = save_embeddings(chatwindow_uuid, file.filename, embeddings_np)
+        
         document = await create_document(db, chatwindow_uuid, file.filename, embedding_path)
 
         await create_text_chunks(db, document.id, chunks_with_pages)
@@ -64,7 +64,7 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
         print(f"Selected new chatwindow: {chatwindow_uuid}")
         print("Index size:", request.app.state.index.ntotal)
 
-        return {"status": "success", "doc_uuid": doc_uuid, "chunks_added": len(chunks)}
+        return {"status": "success", "doc_uuid": document.id, "chunks_added": len(chunks)}
 
     except Exception as e:
         if os.path.exists(pdf_path):

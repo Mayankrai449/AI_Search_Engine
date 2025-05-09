@@ -1,5 +1,5 @@
 import React from 'react';
-import { createChatWindow, deleteChatWindow } from '../api';
+import { createChatWindow } from '../api';
 import './Sidebar.css';
 
 const Sidebar = ({ 
@@ -24,14 +24,9 @@ const Sidebar = ({
     }
   };
 
-  const handleDeleteChatWindow = async (e, id) => {
+  const handleDeleteChatWindow = (e, id) => {
     e.stopPropagation();
-    try {
-      await deleteChatWindow(id);
-      removeChatWindow(id);
-    } catch (error) {
-      console.error('Failed to delete chat window:', error);
-    }
+    removeChatWindow(id);
   };
 
   return (
@@ -67,7 +62,6 @@ const Sidebar = ({
                   </button>
                 </>
               )}
-              {}
               {isCollapsed && <span className="chat-text-icon">C</span>}
             </div>
           ))}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import ChatArea from './components/ChatArea';
-import { fetchChatWindows, selectChatWindow } from './api';
+import { fetchChatWindows, selectChatWindow, deleteChatWindow } from './api';
 import './App.css';
 
 const App = () => {
@@ -17,19 +17,18 @@ const App = () => {
       try {
         setIsLoading(true);
         const data = await fetchChatWindows();
-
-        const windowsArray = Object.entries(data).map(([uuid, details]) => ({
-          id: uuid,
-          title: details.title,
-          documents: details.documents || [],
+        const windowsArray = data.map(chat => ({
+          id: chat.id,
+          title: chat.title,
+          documents: [],
+          isActive: false
         }));
         
         setChatWindows(windowsArray);
 
         if (windowsArray.length > 0) {
           const lastWindow = windowsArray[windowsArray.length - 1];
-          setActiveChatWindowId(lastWindow.id);
-          setDocuments(lastWindow.documents || []);
+          handleSelectChatWindow(lastWindow.id);
         }
       } catch (error) {
         console.error('Failed to fetch chat windows:', error);
@@ -48,8 +47,7 @@ const App = () => {
 
       setActiveChatWindowId(response.chatwindow_uuid);
       setDocuments(response.documents || []);
-      
-      setChatWindows(prev => 
+      setChatWindows(prev =>
         prev.map(chat => ({
           ...chat,
           isActive: chat.id === id
@@ -65,31 +63,38 @@ const App = () => {
   const addChatWindow = (newChatWindowData) => {
     setChatWindows(prev => [
       ...prev.map(chat => ({ ...chat, isActive: false })),
-      { ...newChatWindowData, isActive: true }
+      { ...newChatWindowData, isActive: true, documents: [] }
     ]);
     setActiveChatWindowId(newChatWindowData.id);
     setDocuments([]);
   };
 
-  const removeChatWindow = (id) => {
-    setChatWindows(prev => prev.filter(chat => chat.id !== id));
-
-    if (id === activeChatWindowId && chatWindows.length > 1) {
-      const remainingWindows = chatWindows.filter(chat => chat.id !== id);
-      const nextWindow = remainingWindows[0];
-      handleSelectChatWindow(nextWindow.id);
-    } else if (chatWindows.length <= 1) {
-
-      setActiveChatWindowId(null);
-      setDocuments([]);
+  const removeChatWindow = async (id) => {
+    try {
+      await deleteChatWindow(id);
+      setChatWindows(prev => {
+        const updatedWindows = prev.filter(chat => chat.id !== id);
+        if (id === activeChatWindowId) {
+          if (updatedWindows.length > 0) {
+            const nextWindow = updatedWindows[0];
+            handleSelectChatWindow(nextWindow.id);
+          } else {
+            setActiveChatWindowId(null);
+            setDocuments([]);
+          }
+        }
+        return updatedWindows;
+      });
+    } catch (error) {
+      console.error('Failed to delete chat window:', error);
     }
   };
 
   const updateDocuments = (newDocuments) => {
     setDocuments(newDocuments);
     setChatWindows(prev =>
-      prev.map(chat => 
-        chat.id === activeChatWindowId 
+      prev.map(chat =>
+        chat.id === activeChatWindowId
           ? { ...chat, documents: newDocuments }
           : chat
       )
@@ -109,6 +114,8 @@ const App = () => {
         documents={documents}
         activeWindowId={activeChatWindowId}
         onDeleteDocument={(docId) => {
+          const updatedDocuments = documents.filter(doc => doc.uuid !== docId);
+          updateDocuments(updatedDocuments);
         }}
       />
       <div className="main-content">

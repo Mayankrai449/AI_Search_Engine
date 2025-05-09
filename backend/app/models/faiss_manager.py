@@ -36,10 +36,10 @@ async def load_chatwindow_data(db, chatwindow_id: str, dimension=768):
             chunk_ids.append(chunks[i].id)
     return index, chunk_ids
 
-def save_embeddings(chatwindow_id: str, doc_id: str, doc_name: str, embeddings_np):
+def save_embeddings(chatwindow_id: str, doc_name: str, embeddings_np):
     chat_dir = os.path.join(DATA_DIR, chatwindow_id)
     os.makedirs(chat_dir, exist_ok=True)
-    embedding_path = os.path.join(chat_dir, f"{doc_id}.npy")
+    embedding_path = os.path.join(chat_dir, f"{doc_name}.npy")
     np.save(embedding_path, embeddings_np)
     return embedding_path
 
