@@ -1,8 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Request, HTTPException, Depends
 from utils.text_utils import extract_and_clean_text, split_text_into_chunks
-from models.faiss_manager import load_chatwindow_data, save_embeddings, delete_document, delete_chatwindow
-from models.db_manager import create_document, create_text_chunks, get_documents_by_chatwindow, delete_document as db_delete_document, delete_chatwindow as db_delete_chatwindow
-from models.database import get_db
+from models.faiss_manager import load_chatwindow_data, save_embeddings
+from models.db_manager import create_document, create_text_chunks
 from sqlalchemy.ext.asyncio import AsyncSession
 import numpy as np
 import asyncio
@@ -11,16 +10,6 @@ import uuid
 
 router = APIRouter()
 
-@router.post("/select-chatwindow")
-async def select_chatwindow(request: Request, chatwindow_uuid: str, db: AsyncSession = Depends(get_db)):
-    index, chunk_ids = await load_chatwindow_data(db, chatwindow_uuid)
-    request.app.state.current_chatwindow = chatwindow_uuid
-    request.app.state.index = index
-    request.app.state.chunk_ids = chunk_ids
-    print("Index size:", request.app.state.index.ntotal)
-
-    documents = await get_documents_by_chatwindow(db, chatwindow_uuid)
-    return {"chatwindow_uuid": chatwindow_uuid, "documents": [{"uuid": doc.id, "name": doc.name} for doc in documents]}
 
 @router.post("/upload")
 async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
@@ -71,29 +60,3 @@ async def upload_pdf(request: Request, chatwindow_uuid: str, file: UploadFile = 
             os.remove(pdf_path)
         raise HTTPException(status_code=500, detail=f"Failed to process PDF: {str(e)}")
 
-@router.delete("/delete-doc")
-async def delete_pdf(request: Request, chatwindow_uuid: str, doc_uuid: str, db: AsyncSession = Depends(get_db)):
-    success = await db_delete_document(db, chatwindow_uuid, doc_uuid)
-    if not success:
-        raise HTTPException(status_code=404, detail="Document not found")
-
-    delete_document(chatwindow_uuid, doc_uuid)
-
-    if getattr(request.app.state, "current_chatwindow", None) == chatwindow_uuid:
-        request.app.state.index, request.app.state.chunk_ids = await load_chatwindow_data(db, chatwindow_uuid)
-
-    return {"status": "deleted", "doc_uuid": doc_uuid}
-
-@router.delete("/delete-chatwindow")
-async def delete_chatwindow_route(request: Request, chatwindow_uuid: str, db: AsyncSession = Depends(get_db)):
-    success = await db_delete_chatwindow(db, chatwindow_uuid)
-    if not success:
-        raise HTTPException(status_code=404, detail="ChatWindow not found")
-
-    delete_chatwindow(chatwindow_uuid)
-
-    if getattr(request.app.state, "current_chatwindow", None) == chatwindow_uuid:
-        request.app.state.index = None
-        request.app.state.current_chatwindow = None
-
-    return {"status": "chatwindow deleted", "chatwindow_uuid": chatwindow_uuid}
