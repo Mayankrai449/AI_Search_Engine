@@ -47,7 +47,7 @@ async def delete_pdf(request: Request, chatwindow_uuid: str, doc_uuid: str, db: 
     if not success:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    delete_document(chatwindow_uuid, doc_uuid)
+    delete_document(db, chatwindow_uuid, doc_uuid)
 
     if getattr(request.app.state, "current_chatwindow", None) == chatwindow_uuid:
         request.app.state.index, request.app.state.chunk_ids = await load_chatwindow_data(db, chatwindow_uuid)
@@ -60,7 +60,7 @@ async def delete_chatwindow_route(request: Request, chatwindow_uuid: str, db: As
     if not success:
         raise HTTPException(status_code=404, detail="ChatWindow not found")
 
-    delete_chatwindow(chatwindow_uuid)
+    delete_chatwindow(db, chatwindow_uuid)
 
     if getattr(request.app.state, "current_chatwindow", None) == chatwindow_uuid:
         request.app.state.index = None

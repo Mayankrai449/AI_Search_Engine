@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, Request, HTTPException, Depends
 from utils.text_utils import extract_and_clean_text, split_text_into_chunks
 from models.faiss_manager import load_chatwindow_data, save_embeddings
 from models.db_manager import create_document, create_text_chunks
+from models.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 import numpy as np
 import asyncio
