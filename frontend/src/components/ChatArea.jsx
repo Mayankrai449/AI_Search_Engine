@@ -16,6 +16,7 @@ const ChatArea = ({
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [popupChunks, setPopupChunks] = useState(null);
+  const [imageSearch, setImageSearch] = useState(true);
   const fileInputRef = useRef(null);
 
   const handleQuerySubmit = async (e) => {
@@ -28,11 +29,13 @@ const ChatArea = ({
     setIsTyping(true);
 
     try {
-      const data = await searchDocuments(query, activeChatId);
+      const data = await searchDocuments(query, activeChatId, imageSearch);
       const aiMessage = {
         sender: 'ai',
         text: data.tailored_response,
-        chunks: data.results || []
+        chunks: data.text_results || [],
+        images: data.image_results || [],
+        imageSearch
       };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
@@ -83,6 +86,10 @@ const ChatArea = ({
     }
   };
 
+  const toggleImageSearch = () => {
+    setImageSearch(prev => !prev);
+  };
+
   useEffect(() => {
     setMessages([]);
   }, [activeChatId]);
@@ -118,6 +125,22 @@ const ChatArea = ({
           </button>
         </div>
         <div className="extra-controls">
+          <button 
+            className={`image-search-btn ${imageSearch ? 'active' : ''}`}
+            type="button"
+            onClick={toggleImageSearch}
+            title={imageSearch ? "Image search enabled" : "Image search disabled"}
+          >
+            <img
+              src="https://img.icons8.com/?size=100&id=53386&format=png&color=000000"
+              alt="Image Search"
+              style={{
+                width: '25px',
+                height: '25px',
+                filter: 'invert(100%)',
+              }}
+            />
+          </button>
           <button 
             className="upload-btn" 
             type="button" 

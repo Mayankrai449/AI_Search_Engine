@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from models.embedding_model import *
 from models.faiss_manager import init_faiss
@@ -11,30 +12,37 @@ import nltk
 
 nltk.download('punkt_tab', quiet=True)
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.sentence_model = await load_sentence_model()
+    app.state.siglip_model, app.state.siglip_processor = await load_siglip_model()
     app.state.llm_model, app.state.llm_tokenizer = await load_llm_model()
-    app.state.index = init_faiss(dimension=768)
+    app.state.index = init_faiss(dimension=1152)
+    app.state.all_ids = []
 
     loop = asyncio.get_event_loop()
     batch_size = 64 if torch.cuda.is_available() else 8
     await loop.run_in_executor(
         None,
-        lambda: encode_with_amp(app.state.sentence_model, ["Warm-up sentence"], batch_size=batch_size)
+        lambda: encode_with_siglip(
+            app.state.siglip_model,
+            app.state.siglip_processor,
+            texts=["Warm-up sentence"],
+            batch_size=batch_size
+        )
     )
 
     yield
 
+    del app.state.siglip_model
+    del app.state.siglip_processor
     del app.state.llm_model
     del app.state.llm_tokenizer
-    del app.state.sentence_model
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-
 app = FastAPI(title="NeoSearch: Hybrid AI Search Engine", lifespan=lifespan)
+
+app.mount("/saved_images", StaticFiles(directory="saved_images"), name="saved_images")
 
 app.add_middleware(
     CORSMiddleware,

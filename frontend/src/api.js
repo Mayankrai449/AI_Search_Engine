@@ -78,12 +78,14 @@ export const uploadFile = async (chatwindow_uuid, file) => {
   }
 };
 
-export const searchDocuments = async (query, chatwindow_uuid) => {
+export const searchDocuments = async (query, chatwindow_uuid, images = true) => {
   try {
     const response = await API.post('/search', {
       query,
-      top_k: 3,
+      top_k: 30,
       chatwindow_uuid
+    }, {
+      params: { images }
     });
     return response.data;
   } catch (error) {

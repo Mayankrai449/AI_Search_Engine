@@ -1,7 +1,7 @@
 from sqlalchemy.future import select
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.db_models import ChatWindow, Document, TextChunk
+from models.db_models import ChatWindow, Document, TextChunk, ImageMetadata
 import uuid
 
 async def create_chatwindow(db: AsyncSession, title: str):
@@ -36,9 +36,15 @@ async def delete_chatwindow(db: AsyncSession, chatwindow_id: str):
         return True
     return False
 
-async def create_document(db: AsyncSession, chatwindow_id: str, name: str, embedding_path: str):
+async def create_document(db: AsyncSession, chatwindow_id: str, name: str, embedding_path: str, image_embedding_path: str = None):
     document_id = str(uuid.uuid4())
-    document = Document(id=document_id, name=name, embedding_path=embedding_path, chatwindow_id=chatwindow_id)
+    document = Document(
+        id=document_id,
+        name=name,
+        embedding_path=embedding_path,
+        image_embedding_path=image_embedding_path,
+        chatwindow_id=chatwindow_id
+    )
     db.add(document)
     await db.commit()
     await db.refresh(document)
@@ -53,6 +59,7 @@ async def delete_document(db: AsyncSession, chatwindow_id: str, doc_id: str):
     document = document.scalars().first()
     if document:
         await db.execute(delete(TextChunk).where(TextChunk.document_id == doc_id))
+        await db.execute(delete(ImageMetadata).where(ImageMetadata.document_id == doc_id))
         await db.delete(document)
         await db.commit()
         return True
@@ -68,4 +75,16 @@ async def create_text_chunks(db: AsyncSession, document_id: str, chunks_with_pag
             page_number=page_number
         )
         db.add(chunk)
+    await db.commit()
+
+async def create_image_metadata(db: AsyncSession, document_id: str, image_data: list[dict], offset: int):
+    for i, img in enumerate(image_data):
+        image_metadata = ImageMetadata(
+            id=str(uuid.uuid4()),
+            document_id=document_id,
+            image_path=img["image_path"],
+            embedding_id=offset + i,
+            meta_data={"page_number": img["page_number"]}
+        )
+        db.add(image_metadata)
     await db.commit()

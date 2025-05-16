@@ -6,6 +6,7 @@ searchenv
 .vscode
 sample.pdf
 data
+saved_images
 # C extensions
 *.so
 

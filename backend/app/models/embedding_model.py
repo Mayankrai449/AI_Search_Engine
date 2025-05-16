@@ -1,21 +1,31 @@
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, AutoProcessor, AutoModel
 import asyncio
 import torch
-from torch.amp import autocast
+from torch.amp.autocast_mode import autocast
 
-async def load_sentence_model():
+async def load_siglip_model(model_name="google/siglip-so400m-patch14-384"):
     try:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         dtype = torch.float16 if device.type == 'cuda' else torch.float32
         loop = asyncio.get_event_loop()
-        sentence_model = await loop.run_in_executor(
+
+        processor = await loop.run_in_executor(
             None,
-            lambda: SentenceTransformer('all-mpnet-base-v2').to(device, dtype=dtype)
+            lambda: AutoProcessor.from_pretrained(model_name)
         )
-        return sentence_model
+        model = await loop.run_in_executor(
+            None,
+            lambda: AutoModel.from_pretrained(
+                model_name,
+                torch_dtype=dtype,
+                device_map="auto"
+            )
+        )
+        model.to(device)
+        return model, processor
     except Exception as e:
-        raise RuntimeError(f"Failed to load sentence model: {e}")
+        raise RuntimeError(f"Failed to load SigLIP model: {e}")
 
 async def load_llm_model():
     try:
@@ -49,9 +59,21 @@ async def load_llm_model():
     except Exception as e:
         raise RuntimeError(f"Failed to load LLM model: {e}")
 
-def encode_with_amp(model, texts, batch_size=64):
-    with autocast(device_type='cuda' if model.device.type == 'cuda' else 'cpu'):
-        return model.encode(texts, convert_to_numpy=True, batch_size=batch_size)
+def encode_with_siglip(model, processor, texts=None, images=None, batch_size=64):
+    device = next(model.parameters()).device
+    with autocast(device_type='cuda' if device.type == 'cuda' else 'cpu'):
+        if texts:
+            inputs = processor(text=texts, return_tensors="pt", padding=True, truncation=True).to(device)
+            with torch.no_grad():
+                embeddings = model.get_text_features(**inputs).cpu().numpy()
+        elif images:
+            inputs = processor(images=images, return_tensors="pt").to(device)
+            with torch.no_grad():
+                embeddings = model.get_image_features(**inputs).cpu().numpy()
+        else:
+            raise ValueError("Either texts or images must be provided")
+        torch.cuda.empty_cache()
+        return embeddings
 
 async def generate_tailored_response(llm_model, llm_tokenizer, query: str, chunks: list[str], max_length: int = 200):
     context = " [SEP] ".join(chunks[:3]) if len(chunks) > 1 else chunks[0] if chunks else ""
