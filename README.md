@@ -1,8 +1,8 @@
 # NeoSearch
 
-NeoSearch is an AI-powered semantic document search engine that offers lightning-fast, privacy-focused querying of large text documents. It allows users to upload documents, generate embeddings offline, and retrieve answers in real-time, all within a local environment.
+NeoSearch is an AI-powered semantic search engine that offers lightning-fast, privacy-focused querying of large text documents and images. It allows users to upload documents, generate embeddings offline, and retrieve answers in real-time, all within a local environment.
 
-Powered by FAISS and the all-mpnet-base-v2 model, NeoSearch blends keyword relevance (BM25) with semantic understanding for highly accurate results. The application features a modern React frontend and a FastAPI backend for optimal performance and responsiveness.
+Powered by FAISS and the google/siglip-so400m-patch14-384 model, NeoSearch blends keyword relevance (BM25) with semantic understanding for highly accurate results across both text and images. The application features a modern React frontend and a FastAPI backend for optimal performance and responsiveness.
 
 ## Features
 
@@ -12,18 +12,24 @@ Powered by FAISS and the all-mpnet-base-v2 model, NeoSearch blends keyword relev
 * **Persistent Embeddings**: Avoid re-indexing on repeated document uploads.
 * **AI-Powered Responses**: Utilizes Qwen2-1.5B-Instruct to generate tailored responses based on retrieved document chunks and user queries.
 * **Single Chat UI**: Intuitive React interface with "Fetched data" buttons below each response that display source documents with PDF names and page numbers.
+* **Image Search Capability**: Semantically search and retrieve relevant images from documents with an image toggle button.
+* **Image Source Information**: Shows which PDF and page number each retrieved image is from, similar to text chunks.
 * **Asynchronous Processing**: Embedding and chunking tasks run in parallel using asyncio and ProcessPoolExecutor.
 * **FastAPI Backend**: Clean, efficient, and async-capable backend for rapid query processing.
 
+
+
 ![Chat](images/chat.png)
+
 ![Data](images/data.png)
+
 
 ## Tech Stack
 
 * **Frontend**: React.js, Axios
 * **Backend**: FastAPI, Uvicorn, PostgreSQL, FAISS
 * **AI Models**: 
-  * `all-mpnet-base-v2` (Sentence Transformers for embeddings)
+  * `google/siglip-so400m-patch14-384` (Multimodal embedding model for both text and images)
   * `Qwen2-1.5B-Instruct` (Response generation)
 * **Search Engine**: FAISS (Semantic) + BM25 (Keyword)
 * **Parallelism**: `asyncio`, `ProcessPoolExecutor`
@@ -79,6 +85,8 @@ Open your browser at http://localhost:3000 to begin querying your documents!
 1. **Upload Document**: Add one or more plain-text or PDF files.
 2. **Query in Chat Window**: Ask your questions using natural language.
 3. **View Source Context**: Click "Fetched data" below responses to see the exact document chunks, source PDF names, and page numbers used to generate the answer.
-4. **Re-query Without Reprocessing**: Upload once, reuse embeddings.
+4. **Search Images**: Use the image toggle button to fetch relevant images when available.
+5. **View Image Sources**: See which PDF and page number each retrieved image comes from.
+6. **Re-query Without Reprocessing**: Upload once, reuse embeddings.
 
-Thank you for using NeoSearch! Feel free to reach out with any questions or issues — **mayankraivns@gmail.com**. Happy querying! 🧠📄
+Thank you for using NeoSearch! Feel free to reach out with any questions or issues — **mayankraivns@gmail.com**. Happy querying! 🧠📄🖼️
